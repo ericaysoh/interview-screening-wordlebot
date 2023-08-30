@@ -21,13 +21,24 @@ const Guess = () => {
 
     const ColorPalette = () => {
         return (
-        <Grid direction="row" spacing={1}>
-            <Box sx={{p: 2, border: '1px solid black', backgroundColor: 'green'}}>w</Box>
-            <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-            <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-            <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-            <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-        </Grid>
+            <Grid>
+
+            
+                <Grid direction="row" spacing={1}>
+                    <Box sx={{p: 2, border: '1px solid black', backgroundColor: 'green'}}>w</Box>
+                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
+                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
+                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
+                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
+                </Grid>
+                <Grid direction="column" spacing={1}>
+                    <Box sx={{p: 2, border: '1px solid black', backgroundColor: 'yellow'}}>w</Box>
+                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
+                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
+                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
+                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
+                </Grid>
+            </Grid>
         )
     }
 
