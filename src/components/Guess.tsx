@@ -9,44 +9,73 @@ const Guess = () => {
     // have a function that generates the components for Word to Guess and response back word boxes
     const GuessWord = () => {
         return (
-            <Stack direction="row" spacing={1}>
-                <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-            </Stack>
-        )
-    }
-
-    const ColorPalette = () => {
-        return (
-            <Grid>
-
-            
-                <Grid direction="row" spacing={1}>
-                    <Box sx={{p: 2, border: '1px solid black', backgroundColor: 'green'}}>w</Box>
-                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                </Grid>
-                <Grid direction="column" spacing={1}>
-                    <Box sx={{p: 2, border: '1px solid black', backgroundColor: 'yellow'}}>w</Box>
-                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                    <Box sx={{p: 2, border: '1px solid black'}}>w</Box>
-                </Grid>
+            <Grid container spacing={1}>
+                {[0, 1, 2, 3, 4].map((index) => (
+                    <Grid item xs={2} key={`transparent-${index}`}>
+                        <Box
+                            sx={{
+                                m: 0.6,
+                                height: 50,
+                                width: 50,
+                                backgroundColor: 'transparent',
+                                border: '0.5px solid lightgrey',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >a</Box>
+                    </Grid>
+                ))}
             </Grid>
         )
     }
 
+    // const GreenBox = (props) => {
+    //     return (
+    //         <Box 
+    //             sx={{p: 2, 
+    //             border: '1px solid black', backgroundColor: 'green'
+    //             }}
+
+    //         >
+    //                 w
+    //         </Box>
+    //     )
+    // }
+
+    // Reusable component for a colored row
+    const ColoredRow = ({ color }: { color: string}) => (
+        <Grid container spacing={1}>
+            {[0, 1, 2, 3, 4].map((index) => (
+                <Grid item xs={2} key={`${color}-${index}`}>
+                    <Box
+                        sx={{
+                            m: 0.6,
+                            height: 50,
+                            width: 50,
+                            backgroundColor: color,
+                            border: '0.5px solid lightgrey'
+                        }}
+                    />
+                </Grid>
+            ))}
+        </Grid>
+    );
+
+
     return (
         <div>
-            <h5>Guess #</h5>
-            <h6>Word to Guess:<GuessWord/></h6>
-            <div>What response did you get back?<GuessWord /><ColorPalette/></div>
+            <h3>Guess #</h3>
+            <div>Word to Guess:<GuessWord/></div>
+            <div>What response did you get back?
+                <GuessWord />
+            </div>
+            <div>
+                {/* <ColoredRow color="transparent" /> */}
+                <ColoredRow color="green" />
+                <ColoredRow color="yellow" />
+                <ColoredRow color="white" />
+            </div>
         </div>
     )
 }
