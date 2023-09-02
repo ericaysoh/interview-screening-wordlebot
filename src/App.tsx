@@ -1,8 +1,8 @@
 import { Container } from "@mui/material";
 import Layout from "./components/Layout";
 import Header from "./components/Header";
-// import WordleBot from "./components/WordleBot";
-import Guess from "./components/Guess";
+import WordleBot from "./components/WordleBot";
+// import Guess from "./components/Guess";
 // import Bot from "./components/Bot";
 
 function App() {
@@ -11,8 +11,8 @@ function App() {
             <Container maxWidth="sm">
                 <Header />
                 {/* Insert App here */}
-                {/* <WordleBot /> */}
-                <Guess />
+                <WordleBot />
+                {/* <Guess /> */}
             </Container>
         </Layout>
     );

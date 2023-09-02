@@ -1,22 +1,28 @@
-import { useState, useEffect, createContext, useContext } from "react";
-import { Box, Stack, Grid, CircularProgress } from "@mui/material"
+import { useState, useEffect } from "react";
+import { Box, Grid, CircularProgress } from "@mui/material"
 import { fetchWordleResult, WordleRequestItem } from "../api/api";
 
 const Guess = () => {
 
     const guess = {
-        word: '',
+        char: '',
         index: -1,
         color: ''
     }
 
-    const [ guessBox, setGuessBox ] = useState<WordleRequestItem>(); // initial state shouldn't be an empty object but rather an initial guess from the API call - unless empty object as initial state is allowed, which then a conditional statement could be used (if guessBox state is {}, then do initial loading)
+    // console.log('guess', guess['color' as keyof typeof guess])
+
+    const [ wordRequest, setwordRequest ] = useState<WordleRequestItem>(); // initial state shouldn't be an empty object but rather an initial guess from the API call - unless empty object as initial state is allowed, which then a conditional statement could be used (if guessBox state is {}, then do initial loading)
+    const [ guessBox, setGuessBox ] = useState<typeof guess>();
     const [ guessBoxArr, setGuessBoxArr ] = useState<typeof guess[]>([]); //array of all the guesses - each guess # should correspond with guessBoxArr index + 1
     const [ selectedIndex, setSelectedIndex ] = useState(-1);
     const [ selectedColor, setSelectedColor ] = useState('');
     // add a Guess# state and incorporate into GuessWord component to avoid all boxes of the same index turning into the same color.. or utilize key? -> props.key === blah blah ? blah blah : blah blah (for backgroundColor in GuessWord)
     const [ isLoading, setIsLoading ] = useState(true);
-    const [ guessWord, setGuessWord ] = useState('')
+    const [ guessWord, setGuessWord ] = useState('');
+    const [ count, setCount ] = useState(1);
+    const [ showSecondGrid, setShowSecondGrid ] = useState(true);
+    const [ clue, setClue ] = useState('xxxxx');
 
     /*
     guessBox:
@@ -37,7 +43,7 @@ const Guess = () => {
         async function fetchInitialGuess() {
             try {
                 const response = await fetchWordleResult([]);
-                setGuessBox({ word: response.guess, clue: ""});
+                // setGuessBox({ word: response.guess, clue: ""});
                 setIsLoading(false);
                 console.log('guess here', response.guess)
                 setGuessWord(response.guess)
@@ -49,12 +55,18 @@ const Guess = () => {
         fetchInitialGuess()
     }, [])
 
-    if (isLoading) {
-        return <CircularProgress />
+    const colorPalette: any = {
+        '0': 'transparent111',
+        '1': 'transparent222',
+        '2': 'transparent',
+        '3': 'transparent',
+        '4': 'transparent'
     }
+    // console.log(colorPalette[1])
 
     // have a function that generates the components for Word to Guess and response back word boxes
     const GuessWord = ({ selectedIndex, selectedColor, response } : { selectedIndex: number, selectedColor: string, response: string}) => {
+        
         return (
             <Grid container spacing={1}>
                 {[0, 1, 2, 3, 4].map((index) => (
@@ -65,13 +77,14 @@ const Guess = () => {
                                 height: 50,
                                 width: 50,
                                 backgroundColor: 
-                                    index === selectedIndex && response === 'toSend' ? selectedColor : 'transparent',
+                                    index === selectedIndex && response === 'toSend' && selectedColor !== 'transparent' ? selectedColor : 'transparent',
                                 border: '0.5px solid lightgrey',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center'
                             }}
-                        >{guessWord[index]}</Box>
+                        >{//guessWord[index].toUpperCase()
+                        }</Box>
                     </Grid>
                 ))}
             </Grid>
@@ -84,11 +97,14 @@ const Guess = () => {
         console.log('index', index)
         setSelectedColor(color);
         console.log('color', color)
-        // setGuessBox({
-        //     index: index,
-        //     color: color
-        // });
+        setGuessBox({
+            char: guessWord[index],
+            index: index,
+            color: color
+        });
         // setGuessBoxArr((prevState) => [...prevState, guessBox]);
+        // setGuessBoxArr([...guessBoxArr, {guessBox}])
+        // setClue((index, color) => {})
         console.log('guessboxarr', guessBoxArr)
     }
 
@@ -107,6 +123,65 @@ const Guess = () => {
     //     }
     // }
 
+    const GuessComponent = () => {
+        return (
+            <div>
+                <h3>Guess #{count}</h3>
+                <div>Word to Guess:
+                    <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='received'/>
+                </div>
+                <div>What response did you get back?
+                    <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='toSend'/>
+                </div>
+            </div>
+        )
+    }
+
+    const [ guesses, setGuesses ] = useState<{}[]>([])
+    const addGuessComponent = () => {
+        if (guesses.length <= 6) {
+            setGuesses([...guesses, {newColor: selectedColor, newIndex: selectedIndex}])
+        }
+    }
+    console.log('guessesArr', guesses)
+
+    const wordArr = Array.from(guessWord)
+
+    const TempGuessWord = ({ selectedIndex, selectedColor, response } : { selectedIndex: number, selectedColor: string, response: string}) => {
+        
+        return (
+            <Grid container spacing={1} direction='row'>
+                    <Grid item xs={2} key={`transparent-${selectedIndex}`}>
+                        <Box
+                            sx={{
+                                m: 0.6,
+                                height: 50,
+                                width: 50,
+                                backgroundColor: selectedColor,
+                                border: '0.5px solid lightgrey',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >{'a'}</Box>
+                    </Grid>
+              
+            </Grid>
+        )
+    }
+   
+
+    const ColoredRowGrid = () => {
+        return (
+            <Grid>
+                <ColoredRow color="green" />
+                <ColoredRow color="yellow" />
+                <ColoredRow color="white" />
+            </Grid>
+        )
+    }
+
+    
     // Reusable component for a colored row
     const ColoredRow = ({ color }: { color: string}) => (
         <Grid container spacing={1}>
@@ -127,22 +202,26 @@ const Guess = () => {
         </Grid>
     );
 
+    const userDataStyle = {
+        fontWeight: 'bold',
+        fontSize: 18
+      }
 
-    return (
+    return isLoading ? (
+        <Box alignItems="center">
+            <CircularProgress />
+        </Box>
+    ) : (
+        
         <div>
-            <h3>Guess #</h3>
-            <div>Word to Guess:
-                <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='received'/>
-            </div>
-            <div>What response did you get back?
-                <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='toSend'/>
-            </div>
-            <div>
-                <ColoredRow color="green" />
-                <ColoredRow color="yellow" />
-                <ColoredRow color="white" />
-            </div>
-            <button onClick={() => {console.log(selectedIndex, selectedColor)}}>Submit</button>
+            <Box sx={userDataStyle}>Hellooooo</Box>
+            <GuessComponent />
+            {wordArr.map((index, color) => (
+                 <TempGuessWord selectedColor={selectedColor} selectedIndex={selectedIndex} response='toSend' key={`transparent-${selectedIndex}`}/>
+            ))}
+            {showSecondGrid && (<ColoredRowGrid />)}
+
+            <button onClick={() => {setCount(count + 1); setShowSecondGrid(false); setTimeout(() => { setShowSecondGrid(true);}, 0)}}>Submit</button>
         </div>
     )
 }
