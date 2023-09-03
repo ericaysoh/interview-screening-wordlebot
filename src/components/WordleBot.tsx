@@ -1,21 +1,14 @@
 // import Layout from "./Layout";
 import { useState, useEffect } from 'react';
-import { Box, Grid, CircularProgress } from "@mui/material"
-import { fetchWordleResult, WordleRequestItem } from "../api/api";
+import { Box, Grid, Stack, CircularProgress, Button } from "@mui/material"
+import { fetchWordleResult, WordleRequestItem, WordleRequest } from "../api/api";
 
 const WordleBot = () => {
 
-    // circlularPro at initial load
-    // render the following components:
-        // "Guess # --" <-- Typography
-        // "Word to Guess:" <-- Typography + 5 boxes that renders the return value, one character at a time, from initial load, then subsequently from WordleResponse
-        // "What response did you get back?" <-- Typography + 4 rows of 5 boxes, where the first row should be the same as "Word to Guess" and the following rows being different colors which the user can choose from; when the user clicks a color, the corresponding character above it should have its box turn into that same color
-        // Submit button - should grab properties of WordleRequestItem within WordleRequest array; if boxes are not all green at submission, another set of "Guess # --" and following components should be added to the page
-        // an extra div to render the error statement if any or a "Yay! All Done" message if all green boxes - create another file for error handling if API doesn't already handle it
-
-    const [ wordRequest, setwordRequest ] = useState<WordleRequestItem>(); // initial state shouldn't be an empty object but rather an initial guess from the API call - unless empty object as initial state is allowed, which then a conditional statement could be used (if guessBox state is {}, then do initial loading)
+    const [ wordRequest, setWordRequest ] = useState<WordleRequestItem[]>([{word: '', clue: ''}]);
+    // const [ wordRequest, setWordRequest ] = useState<WordleRequest>([{word: '', clue: ''}])
     // const [ guessBox, setGuessBox ] = useState<typeof guess>();
-    // const [ guessBoxArr, setGuessBoxArr ] = useState<typeof guess[]>([]); //array of all the guesses - each guess # should correspond with guessBoxArr index + 1
+    const [ guessComponentArr, setGuessComponentArr ] = useState([]); //array of all the guesses - each guess # should correspond with guessComponentArr index + 1
     const [ selectedIndex, setSelectedIndex ] = useState(-1);
     const [ selectedColor, setSelectedColor ] = useState('');
     // add a Guess# state and incorporate into GuessWord component to avoid all boxes of the same index turning into the same color.. or utilize key? -> props.key === blah blah ? blah blah : blah blah (for backgroundColor in GuessWord)
@@ -23,51 +16,75 @@ const WordleBot = () => {
     const [ guessWord, setGuessWord ] = useState('');
     const [ count, setCount ] = useState(1);
     // const [ showSecondGrid, setShowSecondGrid ] = useState(true);
-    const [ clue, setClue ] = useState('xxxxx');
+    const [ colorClue, setColorClue ] = useState('xxxxx');
+
+    // useEffect(() => {
+    //     async function fetchInitialGuess() {
+    //         try {
+    //             const response = await fetchWordleResult([]);
+    //             // setGuessBox({ word: response.guess, clue: ""});
+    //             setIsLoading(false);
+    //             console.log('guess here', response.guess)
+    //             setGuessWord(response.guess)
+    //         } catch (error) {
+    //             console.error(error);
+    //             setIsLoading(false);
+    //         }
+    //     }
+    //     fetchInitialGuess()
+    // }, [])
 
     useEffect(() => {
-        async function fetchInitialGuess() {
-            try {
-                const response = await fetchWordleResult([]);
-                // setGuessBox({ word: response.guess, clue: ""});
-                setIsLoading(false);
-                console.log('guess here', response.guess)
-                setGuessWord(response.guess)
-            } catch (error) {
-                console.error(error);
-                setIsLoading(false);
-            }
+        if (wordRequest[0].word !== '' || isLoading){
+            fetchGuess()
         }
-        fetchInitialGuess()
-    }, [])
+    }, [wordRequest])
 
-
+    async function fetchGuess() {
+        try {
+            console.log('wordrequestttt', wordRequest)
+            let response;
+            if (isLoading) {
+                response = await fetchWordleResult([]);
+            } else {
+                response = await fetchWordleResult(wordRequest);
+            }
+            // const response = await fetchWordleResult(wordRequest);
+            // setGuessBox({ word: response.guess, clue: ""});
+            setIsLoading(false);
+            console.log('fetched guess here', response.guess)
+            setGuessWord(response.guess);
+            setWordRequest([{ word: '', clue: ''}])
+        } catch (error) {
+            console.error(error);
+            setIsLoading(false);
+        }
+    }
 
     interface BoardState {
         [arrNum: string]: {
             index: number,
             char: string,
-            color: string
+            color: string,
+            set: boolean
         }
     }
 
-    const [board, setBoard] = useState<BoardState>({})
-    // what I want board to look like for state management:
+    const [boardArr2, setBoardArr2] = useState<BoardState>({})
 
     useEffect(() => {
-        setBoard(setInitialBoard())
+        setBoardArr2(setInitialBoard())
     }, [])
 
     const setInitialBoard = (): BoardState => {
         const initialBoard: BoardState = {};
-        for (let i = 0; i < 2; i++) {
-            for (let j = 0; j < 5; j++) {
-                initialBoard[`arr-${i}-${j}`] = {
-                    index: j,
+            for (let i = 0; i < 5; i++) {
+                initialBoard[`arr-${i}`] = {
+                    index: i,
                     char: '',
-                    color: ''
+                    color: 'white',
+                    set: false
                 }
-            }
         }
         // setBoard(initialBoard)
         return initialBoard
@@ -92,13 +109,12 @@ const WordleBot = () => {
 
     const GuessComponent = () => {
         // const board: any = {};
-        const boardArr1 = []
-        const boardArr2 = []
+        const boardArr1: JSX.Element[] = []
+        const boardArr2: JSX.Element[] = []
+
         for (let i = 0; i < 5; i++) {
-            // board[`idx${i}`] = guessWord[i]
-            // setBoard(...board, {`idx[${i}]`:guessWord[i]})
-            boardArr1.push(<GuessWord index={i} response='received'/>)
-            boardArr2.push(<GuessWord index={i} response='toSend'/>)
+            boardArr1.push(<GuessWord index={i} response='received' board={boardArr1}/>)
+            boardArr2.push(<GuessWord index={i} response='toSend' board={boardArr2}/>)
         }
 
         return (
@@ -106,17 +122,24 @@ const WordleBot = () => {
                 <h3>Guess #{count}</h3>
                 <div>Word to Guess:
                     {/* <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='received'/> */}
-                    <Grid container direction='row'>
-
-                    {boardArr1}
-                    </Grid>
+                    <Stack direction='row'>
+                        {boardArr1}
+                    </Stack>
                 </div>
                 <div>What response did you get back?
                     {/* <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='toSend'/> */}
-                    <Grid container direction='row'>
-
-                    {boardArr2}
-                    </Grid>
+                    <Stack direction='row'>
+                        {boardArr2}
+                        {/* {boardArr2.map((_, index) => (
+                            <GuessWord
+                                key={index}
+                                index={index}
+                                response='toSend'
+                                handleBoxClick={handleBoxClick}
+                                board={boardArr2}
+                            />
+                        ))} */}
+                    </Stack>
                 </div>
             </div>
         )
@@ -129,52 +152,79 @@ const WordleBot = () => {
         const nextColorIndex = (currentColorIndex + 1) % colors.length;
         setSelectedIndex(index);
         if (response === 'toSend') {
-            setBoard((prevBoard) => {
+            setBoardArr2((prevBoard) => {
                 const updated = {
-                    ...prevBoard[`arr-1-${index}`],
+                    ...prevBoard[`arr-${index}`],
                     color: colors[nextColorIndex]
                 };
                 return {
                     ...prevBoard,
-                    [`arr-1-${index}`]: updated
+                    [`arr-${index}`]: updated
                 }
-            })}
-        setCurrentColorIndex(nextColorIndex);
+        })}
         setSelectedColor(colors[nextColorIndex])
+        // function for setting color clue
+        console.log('clicked color', colors[nextColorIndex])
+        if (colors[nextColorIndex] === 'green') setColorClue(colorClue.substring(0, index) + 'g' + colorClue.substring(index+1));
+        if (colors[nextColorIndex] === 'yellow') setColorClue(colorClue.substring(0, index) + 'y' + colorClue.substring(index+1));
+        if (colors[nextColorIndex] === 'white') setColorClue(colorClue.substring(0, index) + 'x' + colorClue.substring(index+1));
+        console.log('colorClueee', colorClue)
+
+        setCurrentColorIndex(nextColorIndex);
     }
 
 
-    const wordArr = Array.from(guessWord)
+    // const wordArr = Array.from(guessWord)
 
     const GuessWord = (props: any) => {
         const word = ""+guessWord[props.index]
+
+        // const board = props.response === 'toSend' ? boardArr2 : boardArr1
         return (
             <Grid container spacing={1}>
-                {/* {[0, 1, 2, 3, 4].map((index) => ( */}
-                    {/* <Grid item xs={2} key={`transparent-${selectedIndex}`}> */}
-                        <Box
-                            onClick={() => {handleBoxClick(props.response, props.index); console.log('props color', props.selectedColor)}}
-                            id={`arr-1-${props.index}`}
-                            bgcolor={board[`arr-1-${props.index}`].color}
-                            sx={{
-                                m: 0.6,
-                                height: 50,
-                                width: 50,
-                                // backgroundColor: colors[currentColorIndex],
-                                border: '0.5px solid lightgrey',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center'
-                            }}
-                            
-                        >{word.toUpperCase()
-                        }</Box>
-                    {/* </Grid> */}
-                {/* ))} */}
+                <Box
+                    onClick={() => {handleBoxClick(props.response, props.index)}}
+                    id={`arr-${props.index}`}
+                    // bgcolor={board[`arr-1-${props.index}`].color}
+                    sx={{
+                        mx: 'auto',
+                        my: 2,
+                        height: 50,
+                        width: 50,
+                        backgroundColor: boardArr2[`arr-${props.index}`].color,
+                        border: '0.5px solid lightgrey',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                    }}
+                    
+                >{word.toUpperCase()}
+                </Box>
             </Grid>
         )
     }
 
+
+   
+
+    const HandleSubmitClick = () => {
+        // setWordRequest((prevWordRequest) => ({
+        //     ...prevWordRequest,
+        //     word: guessWord,
+        //     clue: colorClue
+        // }))
+        
+        setWordRequest([{
+            word: guessWord,
+            clue: colorClue
+        }])
+        console.log('newguess', guessWord)
+        setCount(count + 1)
+
+    }
+
+
+     // an extra div to render the error statement if any or a "Yay! All Done" message if all green boxes - create another file for error handling if API doesn't already handle it
 
     return isLoading ? (
         <Box alignItems="center">
@@ -182,10 +232,14 @@ const WordleBot = () => {
         </Box>
     ) : (
         <div>
-
-            <div>Hello from the other side</div>
             <GuessComponent />
             {/* <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='toSend'/> */}
+            <Box display='flex' justifyContent='flex-end'>
+                <Button 
+                    variant='contained' 
+                    onClick={HandleSubmitClick}
+                >Submit</Button>
+            </Box>
         </div>
     )
     

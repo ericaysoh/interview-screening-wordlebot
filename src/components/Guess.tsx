@@ -55,14 +55,6 @@ const Guess = () => {
         fetchInitialGuess()
     }, [])
 
-    const colorPalette: any = {
-        '0': 'transparent111',
-        '1': 'transparent222',
-        '2': 'transparent',
-        '3': 'transparent',
-        '4': 'transparent'
-    }
-    // console.log(colorPalette[1])
 
     // have a function that generates the components for Word to Guess and response back word boxes
     const GuessWord = ({ selectedIndex, selectedColor, response } : { selectedIndex: number, selectedColor: string, response: string}) => {
