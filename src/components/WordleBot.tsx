@@ -1,6 +1,6 @@
 // import Layout from "./Layout";
 import { useState, useEffect } from 'react';
-import { Box, Grid, Stack, CircularProgress, Button, Typography } from "@mui/material"
+import { Box, Grid, Stack, CircularProgress, Button, Typography, Divider } from "@mui/material"
 import { fetchWordleResult, WordleRequestItem, WordleRequest } from "../api/api";
 
 const WordleBot = () => {
@@ -10,6 +10,7 @@ const WordleBot = () => {
     const [ guessComponentArr, setGuessComponentArr ] = useState<{word: string; clue: string; count: number}[]>([]); //array of all the guesses - each guess # should correspond with guessComponentArr index + 1
     const [ selectedIndex, setSelectedIndex ] = useState(-1);
     const [ selectedColor, setSelectedColor ] = useState('');
+    const [ currentColorIndex, setCurrentColorIndex ] = useState(-1)
     const [ isLoading, setIsLoading ] = useState(true);
     const [ guessWord, setGuessWord ] = useState('');
     const [ count, setCount ] = useState(1);
@@ -103,38 +104,42 @@ const WordleBot = () => {
 
         return (
             <div>
-                <h3>Guess #{guessData.count}</h3>
-                <div>Word to Guess:
+                <Typography variant='h3' sx={{my:2}} >Guess #{guessData.count}</Typography>
+                <Typography variant='h5' sx={{my:0.5}}>Word to Guess:</Typography>
                     {/* <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='received'/> */}
-                    <Stack direction='row'>
-                        {boardArr1}
-                    </Stack>
-                </div>
-                <div>What response did you get back?
+                <Stack direction='row' sx={{mb:1}}>
+                    {boardArr1}
+                </Stack>
+                
+                <Typography variant='h5' sx={{my:0.5}}>What response did you get back?</Typography>
                     {/* <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='toSend'/> */}
-                    <Stack direction='row'>
-                        {boardArr2}
-                        {/* {boardArr2.map((_, index) => (
-                            <GuessWord
-                                key={index}
-                                index={index}
-                                response='toSend'
-                                handleBoxClick={handleBoxClick}
-                                board={boardArr2}
-                            />
-                        ))} */}
-                    </Stack>
-                </div>
+                <Stack direction='row' sx={{mb:2}}>
+                    {boardArr2}
+                    {/* {boardArr2.map((_, index) => (
+                        <GuessWord
+                            key={index}
+                            index={index}
+                            response='toSend'
+                            handleBoxClick={handleBoxClick}
+                            board={boardArr2}
+                        />
+                    ))} */}
+                </Stack>
+                { (winOrLose === 'playing' && guessData.count===guessComponentArr.length) && (
+                    <Typography color='violet'>Click on the letters above to change colors!</Typography>)}
+                <Divider sx={{my:5}}/>
             </div>
         )
     }
 
     const colors = ['green', 'yellow', 'white']
-    const [currentColorIndex, setCurrentColorIndex] = useState(-1)
+    
 
     const handleBoxClick = (response: string, index: number) => {
         const nextColorIndex = (currentColorIndex + 1) % colors.length;
-        setSelectedIndex(index);
+
+        setSelectedIndex(index); // necessary?
+
         if (response === 'toSend') {
             setBoardArr2((prevBoard) => {
                 const updated = {
@@ -147,14 +152,13 @@ const WordleBot = () => {
                 }
         })}
         setSelectedColor(colors[nextColorIndex]) // necessary?
+
         // function for setting color clue
-        console.log('clicked color', colors[nextColorIndex])
         if (colors[nextColorIndex] === 'green') setColorClue(colorClue.substring(0, index) + 'g' + colorClue.substring(index+1));
         if (colors[nextColorIndex] === 'yellow') setColorClue(colorClue.substring(0, index) + 'y' + colorClue.substring(index+1));
         if (colors[nextColorIndex] === 'white') setColorClue(colorClue.substring(0, index) + 'x' + colorClue.substring(index+1));
         console.log('colorClueee', colorClue)
-
-        setCurrentColorIndex(nextColorIndex); //necessary?
+        setCurrentColorIndex(nextColorIndex);
     }
 
     const GuessWord = (props: any) => {
@@ -185,8 +189,6 @@ const WordleBot = () => {
     }
 
 
-   
-
     const handleSubmitClick = () => {
 
         const newGuessData = {
@@ -194,7 +196,7 @@ const WordleBot = () => {
             clue: colorClue,
             count: count+1
         }
-        if (count < 6) {
+        if (count < 6 && colorClue !== 'ggggg') {
             setGuessComponentArr([...guessComponentArr, newGuessData])
         }
 
@@ -225,15 +227,20 @@ const WordleBot = () => {
 
             {/* <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='toSend'/> */}
             { winOrLose === 'playing' && (
-                <Box display='flex' justifyContent='flex-end'>
-                    <Button 
-                        variant='contained' 
-                        onClick={handleSubmitClick}
-                    >Submit</Button>
-                </Box>
+                <div>
+                    {/* <Typography color='violet'>Click on the letters above to change colors!</Typography> */}
+                    
+                    <Box display='flex' justifyContent='flex-end' sx={{m:2}}>
+                        <Button
+                            variant='contained' 
+                            onClick={handleSubmitClick}
+                            >Submit
+                        </Button>
+                    </Box>
+                </div>
             )}
-            { winOrLose === 'win' && <Typography>Yay all done!</Typography> }
-            { winOrLose === 'lose' && <Typography>Sorry, try again!</Typography>}
+            { winOrLose === 'win' && <Typography variant='h3' sx={{my:5}}>Yay! All done!</Typography> }
+            { winOrLose === 'lose' && <Typography variant='h3' sx={{my:10}}>Sorry, try again!</Typography>}
         </div>
     )
     
