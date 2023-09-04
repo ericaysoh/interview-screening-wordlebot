@@ -5,11 +5,8 @@ import { fetchWordleResult, WordleRequestItem, WordleRequest } from "../api/api"
 
 const WordleBot = () => {
 
-    // const [ wordRequest, setWordRequest ] = useState<WordleRequestItem[]>([{word: '', clue: ''}]);
     const [ wordRequest, setWordRequest ] = useState<WordleRequest>([{word: '', clue: ''}])
-    const [ guessComponentArr, setGuessComponentArr ] = useState<{word: string; clue: string; count: number}[]>([]); //array of all the guesses - each guess # should correspond with guessComponentArr index + 1
-    const [ selectedIndex, setSelectedIndex ] = useState(-1);
-    const [ selectedColor, setSelectedColor ] = useState('');
+    const [ guessComponentArr, setGuessComponentArr ] = useState<{word: string; clue: string; count: number}[]>([]);
     const [ currentColorIndex, setCurrentColorIndex ] = useState(-1)
     const [ isLoading, setIsLoading ] = useState(true);
     const [ guessWord, setGuessWord ] = useState('');
@@ -17,6 +14,7 @@ const WordleBot = () => {
     const [ colorClue, setColorClue ] = useState('xxxxx');
     const [ winOrLose, setWinOrLose ] = useState('playing');
     const [ errorMessage, setErrorMessage ] = useState<Error | null>(null);
+    const [wordBoard, setWordBoard] = useState<BoardState>({rows:[]})
 
 
     useEffect(() => {
@@ -34,6 +32,7 @@ const WordleBot = () => {
             if (isLoading) {
                 response = await fetchWordleResult([]);
                 setGuessComponentArr([{word: guessWord, clue: colorClue, count: count}])
+                setWordBoard(setNewRow())
             } else {
                 response = await fetchWordleResult(wordRequest);
             }
@@ -41,25 +40,14 @@ const WordleBot = () => {
             setIsLoading(false);
             setGuessWord(response.guess);
             setWordRequest([{ word: '', clue: ''}])
-
-            // setWordBoard(setNewRow())
         console.log('wordBoardddd', wordBoard)
         } catch (error) {
-            // setErrorMessage(error as any);
             console.error(error);
-            // const errorMessage1 = (error instanceof Error) ? error.message : "An unknown error occurred";
             setErrorMessage(error as Error);
             setIsLoading(false);
         }
     }
 
-    // interface BoardState {
-    //     [arrNum: string]: {
-    //         index: number,
-    //         char: string,
-    //         color: string,
-    //     }
-    // } 
 
     interface BoardState {
         rows: {
@@ -97,39 +85,15 @@ const WordleBot = () => {
     // }
 
 
-    const [wordBoard, setWordBoard] = useState<BoardState>({rows:[]})
-    // const [wordBoard, setWordBoard] = useState<[{index: number, char: string, color: string}][]>([]) // -> nested array
-    
-    // const setNewRow = (): BoardState => {
-    //     // Create a new row with empty boxes
-    //     // const newRow = {
-    //     //   boxes: Array(5).fill({
-    //     //     // index: 0,
-    //     //     char: guessWord,
-    //     //     color: 'white',
-    //     //   }),
-    //     // };
-    //     const newRow = {
-    //         boxes: [] as {char: string, color: string}[]
-    //     }
-    //     for (let i = 0; i < 5; i++) {
-    //         newRow.boxes.push({
-    //             char: guessWord[i],
-    //             color: 'white'
-    //         })
-    //     }
+  
 
-    //     return {
-    //         rows: [...wordBoard.rows, newRow]
-    //     }
-    // }
 
     const setNewRow = (): BoardState => {
         const newBoard: BoardState = {
           rows: [],
         };
       
-        for (let rowNum = 0; rowNum < 5; rowNum++) {
+        for (let rowNum = 0; rowNum < 6; rowNum++) {
           const row = {
             boxes: [] as {char: string, color: string}[],
           };
@@ -150,10 +114,19 @@ const WordleBot = () => {
       
 
 
-    useEffect(() => {
-        setWordBoard(setNewRow())
-        console.log('wordBoardddd', wordBoard)
-    }, [])
+    // useEffect(() => {
+    //     setWordBoard(setNewRow())
+    //         console.log('wordBoardddd?', wordBoard)
+
+    //         // setWordBoard((prevBoard) => {
+                
+    //         //     const updatedRow = [...prevBoard.rows];
+    //         //     const updatedBox = { ...updatedRow[count-1].boxes[boxIndex], char: guessWord[boxIndex] };
+    //         //     updatedRow[count-1].boxes[boxIndex] = updatedBox; 
+    //         //     return { rows: updatedRow };
+    //         // })
+    
+    // }, [guessWord])
     
     // console.log('guessword', guessWord)
     // const setInitialBoard = (): BoardState => {
@@ -176,12 +149,12 @@ const WordleBot = () => {
         const boardArr2: JSX.Element[] = []
 
         for (let i = 0; i < 5; i++) {
-            boardArr1.push(<CharBox boxIndex={i} key={`bA1-${i}`} response='received' board={boardArr1}/>)
-            boardArr2.push(<CharBox boxIndex={i} key={`bA2-${i}`} response='toSend' board={boardArr2}/>)
+            boardArr1.push(<CharBox rowIndex={guessData.count-1} boxIndex={i} key={`bA1-${i}`} char={guessWord[i]} response='received'/>)
+            boardArr2.push(<CharBox rowIndex={guessData.count-1} boxIndex={i} key={`bA2-${i}`} char={guessWord[i]} response='toSend'/>)
         }
         console.log('bA1', boardArr1)
         console.log('bA2', boardArr2)
-
+        // console.log('rows', wordBoard.rows[count])
         return (
             <div>
                 <Typography variant='h3' sx={{my:2}} >Guess #{guessData.count}</Typography>
@@ -213,36 +186,33 @@ const WordleBot = () => {
     const colors = ['green', 'yellow', 'white']
     
 
-    const handleBoxClick = (response: string, index: number) => {
+    const handleBoxClick = (response: string, boxIndex: number) => {
         const nextColorIndex = (currentColorIndex + 1) % colors.length;
-
-        setSelectedIndex(index); // necessary?
 
         if (response === 'toSend') {
             setWordBoard((prevBoard) => {
-
                 const updatedRow = [...prevBoard.rows];
-                const updatedBox = { ...updatedRow[count-1].boxes[index], color: colors[nextColorIndex] };
-                updatedRow[count-1].boxes[index] = updatedBox; 
+                const updatedBox = { ...updatedRow[count-1].boxes[boxIndex], color: colors[nextColorIndex] };
+                updatedRow[count-1].boxes[boxIndex] = updatedBox; 
                 return { rows: updatedRow };
-        })
-    }
-        setSelectedColor(colors[nextColorIndex]) // necessary?
+            })
+        };
 
         // function for setting color clue
-        if (colors[nextColorIndex] === 'green') setColorClue(colorClue.substring(0, index) + 'g' + colorClue.substring(index+1));
-        if (colors[nextColorIndex] === 'yellow') setColorClue(colorClue.substring(0, index) + 'y' + colorClue.substring(index+1));
-        if (colors[nextColorIndex] === 'white') setColorClue(colorClue.substring(0, index) + 'x' + colorClue.substring(index+1));
+        if (colors[nextColorIndex] === 'green') setColorClue(colorClue.substring(0, boxIndex) + 'g' + colorClue.substring(boxIndex+1));
+        if (colors[nextColorIndex] === 'yellow') setColorClue(colorClue.substring(0, boxIndex) + 'y' + colorClue.substring(boxIndex+1));
+        if (colors[nextColorIndex] === 'white') setColorClue(colorClue.substring(0, boxIndex) + 'x' + colorClue.substring(boxIndex+1));
         console.log('colorClueee', colorClue)
         setCurrentColorIndex(nextColorIndex);
 
 
     }
 
-    const CharBox = (props: any) => {
-        const char = ""+guessWord[props.boxIndex]
+    const CharBox = (props: {rowIndex: number, boxIndex: number, key: string, char: string, response: string}) => {
+        // const char = ""+guessWord[props.boxIndex]
+        const wbChar = wordBoard.rows[props.rowIndex].boxes[props.boxIndex].char
+        const char = ""+props.char
 
-        // const board = props.response === 'toSend' ? boardArr2 : boardArr1
         return (
                 <Box
                     onClick={() => {handleBoxClick(props.response, props.boxIndex)}}
@@ -253,14 +223,14 @@ const WordleBot = () => {
                         mr: 'auto',
                         height: 50,
                         width: 50,
-                        backgroundColor: props.response === 'toSend' ? wordBoard.rows[count-1].boxes[props.boxIndex].color : 'white',
+                        backgroundColor: props.response === 'toSend' ? wordBoard.rows[props.rowIndex].boxes[props.boxIndex].color : 'white',
                         border: '0.5px solid lightgrey',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center'
                     }}
                     
-                >{char.toUpperCase()}
+                >{!wbChar ? char.toUpperCase() : wbChar.toUpperCase()}
                 </Box>
         )
     }
@@ -277,12 +247,15 @@ const WordleBot = () => {
             setGuessComponentArr([...guessComponentArr, newGuessData])
         }
 
-          //const newBoardStateRow =      initialBoard[arr-0][`box-${i}`] = {
-    //         index: i,
-    //         char: guessWord[i],
-    //         color: 'white'
-    //     }
-    //      setBoardState([...boardState])
+
+    setWordBoard((prevBoard) => {
+        const updatedRow = [...prevBoard.rows];
+            for (let boxIndex = 0; boxIndex < 5; boxIndex++) {
+                const updatedBox = { ...updatedRow[count-1].boxes[boxIndex], char: guessWord[boxIndex] };
+                updatedRow[count-1].boxes[boxIndex] = updatedBox; 
+            }
+        return { rows: updatedRow };
+    })
 
         console.log('guessComponentArr here',guessComponentArr)
         
@@ -312,12 +285,8 @@ const WordleBot = () => {
                 <GuessComponent key={index} guessData={guessData} />
                 ))}
                 {/* </Grid> */}
-
-            {/* <GuessWord selectedIndex={selectedIndex} selectedColor={selectedColor} response='toSend'/> */}
             { winOrLose === 'playing' && (
                 <div>
-                    {/* <Typography color='violet'>Click on the letters above to change colors!</Typography> */}
-                    
                     <Box display='flex' justifyContent='flex-end' sx={{m:2}}>
                         <Button
                             variant='contained' 
